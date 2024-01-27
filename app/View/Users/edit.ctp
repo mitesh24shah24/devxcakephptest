@@ -1,32 +1,50 @@
-<!-- app/View/Users/add.ctp -->
 <div class="users form">
-<?php echo $this->Form->create('User'); ?>
+    <?php echo $this->Form->create('User', array('id' => 'editForm')); ?>
     <fieldset>
         <legend><?php echo __('Edit User'); ?></legend>
-        <?php 
-		echo $this->Form->hidden('id', array('value' => $this->data['User']['id']));
-		echo $this->Form->input('firstname');
-        echo $this->Form->input('lastname',array('required'=>true));
-		echo $this->Form->input('email', array( 'readonly' => 'readonly', 'label' => 'Usernames cannot be changed!'));
-		echo $this->Form->input('phone');
-        echo $this->Form->input('password_update', array( 'label' => 'New Password (leave empty if you do not want to change)', 'maxLength' => 255, 'type'=>'password','required' => 0));
-		echo $this->Form->input('password_confirm_update', array('label' => 'Confirm New Password', 'maxLength' => 255, 'title' => 'Confirm New password', 'type'=>'password','required' => 0));
-		
-		echo $this->Form->input('address');
-		echo $this->Form->input('state', array(
-            'options' => $statelist
-        ));
+        <?php
+        echo $this->Form->hidden('id', array('value' => $this->request->data['User']['id']));
+        echo $this->Form->input('firstname', array('required' => true, 'class' => 'form-control'));
+        echo $this->Form->input('lastname', array('required' => true, 'class' => 'form-control'));
+        echo $this->Form->input('email', array('required' => true, 'class' => 'form-control'));
+        echo $this->Form->input('phone', array('required' => true, 'maxLength' => 10, 'label' => 'Contact Number', 'class' => 'form-control'));
+        echo $this->Form->input('address', array('required' => true, 'class' => 'form-control'));
+        echo $this->Form->input('state', array('options' => $statelist, 'class' => 'form-control'));
         echo $this->Form->input('is_admin', array('type' => 'checkbox', 'label' => 'Mark as Admin', 'value' => '1'));
 
-		echo $this->Form->submit('Edit User', array('class' => 'form-submit',  'title' => 'Click here to add the user') ); 
-?>
+        echo $this->Form->submit('Edit User', array('class' => 'form-submit', 'title' => 'Click here to edit the user'));
+        ?>
     </fieldset>
-<?php echo $this->Form->end(); ?>
+    <?php echo $this->Form->end(); ?>
 </div>
-<?php 
-echo $this->Html->link( "Return to Dashboard",   array('action'=>'index') ); 
-?>
-<br/>
-<?php 
-//echo $this->Html->link( "Logout",   array('action'=>'logout') ); 
-?>
+
+
+<script>
+    $(document).ready(function() {
+        $('#editForm').submit(function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            var formData = $(this).serialize(); // Serialize form data
+
+            $.ajax({
+                type: 'POST',
+                url: '<?php echo $this->Html->url(array('controller' => 'users', 'action' => 'edit', $this->request->data['User']['id'])); ?>',
+                data: formData,
+                success: function(response) {
+                    console.log(response);
+                    response = JSON.parse(response);
+                    if (response.success) {
+                    	window.location.href = '<?php echo $this->Html->url(array('controller' => 'users', 'action' => 'index')); ?>';
+                	}
+                	else {
+                        // Handle other scenarios, if necessary
+                        alert(response.msg);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error: ' + error);
+                }
+            });
+        });
+    });
+</script>

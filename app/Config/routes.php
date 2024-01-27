@@ -29,6 +29,8 @@
 /**
  * ...and connect the rest of 'Pages' controller's URLs.
  */
+	define('BASE_URL', Router::url('/', true));
+
 	Router::connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
 	Router::connect('/', array('controller' => 'users', 'action' => 'login'));
 	Router::connect('/signup', array('controller' => 'users', 'action' => 'add'));

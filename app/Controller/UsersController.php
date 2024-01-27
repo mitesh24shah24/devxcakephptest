@@ -15,7 +15,7 @@ class UsersController extends AppController {
     }
 	
 
-	public function login() {
+	/*public function login_old() {
 		
 		//if already logged-in, redirect
 		if($this->Session->check('Auth.User')){
@@ -33,7 +33,27 @@ class UsersController extends AppController {
 				$this->Session->setFlash(__('Invalid username or password'));
 			}
 		} 
+	}*/
+
+	public function login() {
+	    //$this->autoRender = false; // Disable rendering of the view
+		if($this->Session->check('Auth.User')){
+			$this->redirect(array('action' => 'index'));		
+		}
+	    if ($this->request->is('post')) {
+	        if ($this->Auth->login()) {
+	            $user = $this->Auth->user();
+	            $this->Session->write('userdata', $user);
+	            $response = array('success' => true, 'message' => __('Welcome, ' . $this->Auth->user('email')));
+	            $this->Session->setFlash(__('Welcome, '. $this->Auth->user('email')));
+	        } else {
+	            $response = array('success' => false, 'message' => __('Invalid username or password'));
+	        }
+	        echo json_encode($response); // Return JSON response
+	        exit;
+	    }
 	}
+
 
 	public function logout() {
 		$this->redirect($this->Auth->logout());
@@ -52,7 +72,7 @@ class UsersController extends AppController {
     }
 
 
-    public function add() {
+    public function add_old() {
     	if($this->Session->check('Auth.User')){
 			$this->redirect(array('action' => 'index'));		
 		}
@@ -73,6 +93,33 @@ class UsersController extends AppController {
         }
     }
 
+    public function add() {
+    	if($this->Session->check('Auth.User')){
+			$this->redirect(array('action' => 'index'));		
+		}
+	    if ($this->request->is('ajax')) {
+	        //$this->autoRender = false;
+	        $this->layout = 'ajax'; // Optional: Use a separate layout for Ajax requests
+
+	        $this->User->create();
+	        if ($this->User->save($this->request->data)) {
+	        	$this->Auth->login();
+	        	$this->Session->setFlash(__('The new user has been created'));
+	            echo json_encode(array('success' => true));
+	        } else {
+	            echo json_encode(array('success' => false));
+	        }
+	        exit;
+	    } else {
+	        // Handle non-Ajax form submission as before
+	        // ...
+	        
+	    }
+	    $states = $this->get_state();
+	    $this->set('statelist',$states);
+	}
+
+
     public function get_state()
     {
     	$this->loadModel('State');
@@ -86,6 +133,45 @@ class UsersController extends AppController {
     }
 
     public function edit($id = null) {
+	    //$this->layout = 'ajax'; // Use a separate layout for Ajax requests if needed
+
+	    if (!$id) {
+	        //$this->Session->setFlash('Please provide a user id');
+	        //$this->redirect(array('action' => 'index'));
+	        echo json_encode(array('success' => false,'msg'=>'Invalid User ID Provided'));
+	        exit;
+	    }
+
+	    $user = $this->User->findById($id);
+	    if (!$user) {
+	        //$this->Session->setFlash('Invalid User ID Provided');
+	        //$this->redirect(array('action' => 'index'));
+	        echo json_encode(array('success' => false,'msg'=>'Invalid User ID Provided'));
+	        exit;
+	    }
+
+	    $states = $this->get_state();
+	    $this->set('statelist', $states);
+
+	    if ($this->request->is('post') || $this->request->is('put')) {
+	        $this->User->id = $id;
+	        if ($this->User->save($this->request->data)) {
+	            $response =  json_encode(array('success' => true));
+	            $this->Session->setFlash(__('user data has been updated'));
+	        } else {
+	            $response =  json_encode(array('success' => false,'msg'=>'Error occured during update records'));
+	        }
+	        echo $response;
+	        exit;
+	    }
+
+	    if (!$this->request->data) {
+	        $this->request->data = $user;
+	    }
+	}
+
+
+    public function edit_old($id = null) {
 
 		    if (!$id) {
 				$this->Session->setFlash('Please provide a user id');
@@ -98,6 +184,8 @@ class UsersController extends AppController {
 				$this->redirect(array('action'=>'index'));
 			}
 
+			$states = $this->get_state();
+    		$this->set('statelist',$states);
 			if ($this->request->is('post') || $this->request->is('put')) {
 				$this->User->id = $id;
 				if ($this->User->save($this->request->data)) {
@@ -106,10 +194,6 @@ class UsersController extends AppController {
 				}else{
 					$this->Session->setFlash(__('Unable to update your user.'));
 				}
-			}else
-			{
-				$states = $this->get_state();
-    			$this->set('statelist',$states);
 			}
 
 			if (!$this->request->data) {
@@ -117,7 +201,7 @@ class UsersController extends AppController {
 			}
     }
 
-    public function delete($id = null) {
+    public function delete_old($id = null) {
 		
 		if (!$id) {
 			$this->Session->setFlash('Please provide a user id');
@@ -136,30 +220,36 @@ class UsersController extends AppController {
         $this->Session->setFlash(__('User was not deleted'));
         $this->redirect(array('action' => 'index'));
     }
-	
-	/*public function activate($id = null) {
-		
-		if (!$id) {
-			$this->Session->setFlash('Please provide a user id');
-			$this->redirect(array('action'=>'index'));
-		}
-		
-        $this->User->id = $id;
-        if (!$this->User->exists()) {
-            $this->Session->setFlash('Invalid user id provided');
-			$this->redirect(array('action'=>'index'));
-        }
-        if ($this->User->saveField('status', 1)) {
-            $this->Session->setFlash(__('User re-activated'));
-            $this->redirect(array('action' => 'index'));
-        }
-        $this->Session->setFlash(__('User was not re-activated'));
-        $this->redirect(array('action' => 'index'));
-    }*/
 
-    public function test(){
-    	echo 'ajay solanki hello';die;
-    }
+    public function delete() {
+	    //$this->autoRender = false; // Disable rendering of the view
+
+	    if ($this->request->is('post')) {
+	        $id = $this->request->data('id');
+	        if (!$id) {
+				//$this->Session->setFlash('Please provide a user id');
+				//$this->redirect(array('action'=>'index'));
+				echo json_encode(array('success' => false,'msg'=>'Please provide a user id'));
+			}
+			
+	        $this->User->id = $id;
+	        if (!$this->User->exists()) {
+	            //$this->Session->setFlash('Invalid user id provided');
+				//$this->redirect(array('action'=>'index'));
+				echo json_encode(array('success' => false,'msg'=>'Invalid user id provided for delete record'));
+	        }
+	        if ($this->User->saveField('status', 0)) {
+	            //$this->Session->setFlash(__('User deleted'));
+	            //$this->redirect(array('action' => 'index'));
+	            echo json_encode(array('success' => true));
+	        }
+	        else {
+	            echo json_encode(array('success' => false,'msg'=>'Error occured during delete record'));
+	        }
+	        exit;
+	    }
+	}
+
 
 }
 
